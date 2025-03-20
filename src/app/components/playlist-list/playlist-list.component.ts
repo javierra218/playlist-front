@@ -1,13 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormArray,
+} from '@angular/forms';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
 
+// PrimeNG Modules
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+
+// Models and Services
 import { Playlist } from '../../models/playlist';
 import { PlaylistService } from '../services/playlist.service';
 
@@ -16,11 +28,14 @@ import { PlaylistService } from '../services/playlist.service';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     TableModule,
     CardModule,
     ButtonModule,
     ToastModule,
+    DialogModule,
+    InputTextModule,
+    InputTextareaModule,
   ],
   templateUrl: './playlist-list.component.html',
   styleUrls: ['./playlist-list.component.css'],
@@ -28,57 +43,123 @@ import { PlaylistService } from '../services/playlist.service';
 })
 export class PlaylistListComponent implements OnInit {
   playlists: Playlist[] = [];
+  displayDialog = false;
+  playlistForm!: FormGroup;
 
   constructor(
     private playlistService: PlaylistService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
     this.loadPlaylists();
+    this.initForm();
   }
 
-  loadPlaylists(): void {
-    this.playlistService.getPlaylists().subscribe({
-      next: (playlists) => (this.playlists = playlists),
-      error: (err) => {
-        console.error('Error al cargar las listas', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las listas de reproducción',
-        });
-      },
+  private initForm(): void {
+    this.playlistForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.minLength(3)]],
+      descripcion: [''],
+      canciones: this.fb.array([]),
     });
   }
 
-  navigateToCreatePlaylist(): void {
-    this.router.navigate(['/playlists/create']);
+  get canciones(): FormArray {
+    return this.playlistForm.get('canciones') as FormArray;
   }
 
-  viewPlaylistDetails(name: string): void {
-    this.router.navigate(['/playlists', name]);
+  addSong(): void {
+    const songGroup = this.fb.group({
+      titulo: ['', Validators.required],
+      artista: ['', Validators.required],
+      album: ['', Validators.required],
+      anno: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
+      genero: ['', Validators.required],
+    });
+    this.canciones.push(songGroup);
   }
 
-  deletePlaylist(name: string): void {
-    this.playlistService.deletePlaylist(name).subscribe({
+  removeSong(index: number): void {
+    this.canciones.removeAt(index);
+  }
+
+  openCreateDialog(): void {
+    this.displayDialog = true;
+    this.playlistForm.reset();
+    this.canciones.clear();
+  }
+
+  createPlaylist(): void {
+    if (this.playlistForm.invalid) return;
+
+    const newPlaylist: Playlist = {
+      nombre: this.playlistForm.value.nombre,
+      descripcion: this.playlistForm.value.descripcion,
+      canciones: this.playlistForm.value.canciones,
+    };
+
+    this.playlistService.createPlaylist(newPlaylist).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: 'Lista eliminada correctamente',
+          detail: 'Lista creada correctamente',
+        });
+        this.displayDialog = false;
+        this.loadPlaylists();
+      },
+      error: (err) => {
+        console.error('Error al crear la lista', err);
+        const errorMessage = err.error?.message || 'Error al crear la lista';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage,
+        });
+      },
+    });
+  }
+
+  private loadPlaylists(): void {
+    this.playlistService.getPlaylists().subscribe({
+      next: (playlists) => (this.playlists = playlists),
+      error: (err) => {
+        console.error('Error al cargar listas', err);
+        const errorMessage = err.error?.message || 'Error al cargar listas';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage,
+        });
+      },
+    });
+  }
+
+  deletePlaylist(nombre: string): void {
+    this.playlistService.deletePlaylist(nombre).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Lista eliminada',
         });
         this.loadPlaylists();
       },
       error: (err) => {
-        console.error('Error al eliminar la lista', err);
+        console.error('Error al eliminar', err);
+        const errorMessage = err.error?.message || 'Error al eliminar lista';
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo eliminar la lista',
+          detail: errorMessage,
         });
       },
     });
+  }
+
+  viewPlaylistDetails(nombre: string): void {
+    this.router.navigate(['/playlists', nombre]);
   }
 }
