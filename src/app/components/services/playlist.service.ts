@@ -28,7 +28,10 @@ export class PlaylistService {
   // Obtener una lista por nombre
   getPlaylistByName(name: string): Observable<Playlist> {
     const headers = this.getHeaders();
-    return this.http.get<Playlist>(backend(`/lists/${name}`), { headers });
+    const encodedName = encodeURIComponent(name);
+    return this.http.get<Playlist>(backend(`/lists/${encodedName}`), {
+      headers,
+    });
   }
 
   // Crear una nueva lista de reproducción
@@ -40,6 +43,9 @@ export class PlaylistService {
   // Eliminar una lista de reproducción
   deletePlaylist(name: string): Observable<void> {
     const headers = this.getHeaders();
-    return this.http.delete<void>(backend(`/lists/${name}`), { headers });
+    const encodedName = encodeURIComponent(name);
+    return this.http.delete<void>(backend(`/lists/${encodedName}`), {
+      headers,
+    });
   }
 }

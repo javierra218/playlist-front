@@ -160,6 +160,7 @@ export class PlaylistListComponent implements OnInit {
   }
 
   viewPlaylistDetails(nombre: string): void {
-    this.router.navigate(['/playlists', nombre]);
+    const encodedNombre = encodeURIComponent(nombre);
+    this.router.navigate(['/playlists', encodedNombre]);
   }
 }

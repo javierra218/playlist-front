@@ -48,7 +48,8 @@ export class PlaylistDetailComponent implements OnInit {
 
   private loadPlaylist(nombre: string): void {
     this.loading = true;
-    this.playlistService.getPlaylistByName(nombre).subscribe({
+    const decodedNombre = decodeURIComponent(nombre);
+    this.playlistService.getPlaylistByName(decodedNombre).subscribe({
       next: (playlist) => {
         this.playlist = playlist;
         this.loading = false;
