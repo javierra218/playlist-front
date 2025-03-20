@@ -1,0 +1,51 @@
+<div class="p-grid p-justify-center">
+  <div class="p-col-12 md:p-col-10 lg:p-col-8">
+    <p-card header="Listas de Reproducción">
+      <!-- Botón para crear una nueva lista -->
+      <div class="p-mb-4">
+        <button
+          pButton
+          type="button"
+          label="Crear Nueva Lista"
+          icon="pi pi-plus"
+          class="p-button-success"
+          (click)="navigateToCreatePlaylist()"
+        ></button>
+      </div>
+
+      <!-- Tabla de listas de reproducción -->
+      <p-table [value]="playlists" [paginator]="true" [rows]="5">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-playlist>
+          <tr>
+            <td>{{ playlist.nombre }}</td>
+            <td>{{ playlist.descripcion }}</td>
+            <td>
+              <!-- Botón para ver detalles -->
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-rounded p-button-info p-mr-2"
+                (click)="viewPlaylistDetails(playlist.nombre)"
+              ></button>
+
+              <!-- Botón para eliminar -->
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-danger"
+                (click)="deletePlaylist(playlist.nombre)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>

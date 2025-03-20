@@ -42,7 +42,10 @@ export class LoginComponent {
           summary: 'Éxito',
           detail: 'Inicio de sesión exitoso',
         });
-        console.log('Inicio de sesión exitoso');
+
+        setTimeout(() => {
+          this.router.navigate(['/playlists']);
+        }, 2000); //2s
       },
       error: (err) => {
         this.messageService.add({
